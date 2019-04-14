@@ -78,7 +78,7 @@ namespace CarApplication.Connection
         {
             try
             {
-                
+
                 WebClient WebClient = new WebClient();
                 string page = WebClient.DownloadString(Url);
                 HtmlDocument Doc = new HtmlDocument();
@@ -97,7 +97,7 @@ namespace CarApplication.Connection
                     string[] array = node.InnerText.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = 0; i < array.Length - 1; i++)
                     {
-                        
+
 
                         TradeMark tradeMark = new TradeMark
                         {
@@ -108,11 +108,13 @@ namespace CarApplication.Connection
                         // db.TradeMarks.Add(tradeMark);
                         // db.SaveChanges();
                         listOfMarksHrefs.Add(tradeMark.TradeMarkUrl);
-                       
-                    
 
+
+
+                    }
                 }
-            
+            }
+
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
@@ -177,7 +179,7 @@ namespace CarApplication.Connection
             {
                 //Parallel.ForEach()
                 //Parallel.ForEach(listOfFamiliesHrefs, href =>
-               
+
                 WebClient WebClient = new WebClient();
                 string page = WebClient.DownloadString(href);
                 HtmlDocument Doc = new HtmlDocument();
@@ -204,13 +206,15 @@ namespace CarApplication.Connection
                             // db.SubFamilies.Add(subFamily);
                             // db.SaveChanges();
                             listOfSubFamiliesHrefs.Add(subFamily.SubFamilyUrl);
-                            
+
                         }
-                        
+
 
                     }
-                  
-            
+                }
+            }
+
+
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
