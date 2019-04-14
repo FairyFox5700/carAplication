@@ -15,12 +15,7 @@ namespace TestCarApplication
           
 
             ParsingCars.GetAutomobileMarks();
-            var marks = ParsingCars.GetListOfTradeMarks();
-            using (var context = new CarEntitiesContext())
-            {
-                marks.ForEach(s => context.TradeMarks.Add(s));
-                context.SaveChanges();
-            }
+    
 
         }
     }

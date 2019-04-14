@@ -23,12 +23,7 @@ namespace CarApplication.Connection
         private static List<SubFamily> subFamilies = new List<SubFamily>();
         private static List<Model> models = new List<Model>();
         private static List<TechData> techData = new List<TechData>();
-        private static List<Task> tasksMark = new List<Task>();
-        private static List<Task> tasksFamily = new List<Task>();
-        private static List<Task> tasksModel = new List<Task>();
-        private static List<Task> tasksTechData = new List<Task>();
-        private static List<Task> tasksSubFamily = new List<Task>();
-
+        private static List<Task> tasks;
         public static List<TradeMark> GetListOfTradeMarks()
         {
             //Task.WaitAll(tasks.ToArray());
@@ -37,23 +32,23 @@ namespace CarApplication.Connection
 
         public static List<Family> GetListOfFamilies()
         {
-            
+
             return families;
         }
 
         public static List<SubFamily> GetListOfSubFamilies()
         {
-            
+
             return subFamilies;
         }
         public static List<Model> GetListOfModels()
         {
-            
+
             return models;
         }
         public static List<TechData> GetListOfTEchInfo()
         {
-           
+
             return techData;
         }
 
@@ -66,256 +61,298 @@ namespace CarApplication.Connection
             return JsonConvert.DeserializeObject<Dictionary<string, string>>(dictInJson.ToString());
         }
 
-        protected internal static Task taskUpdate;
-        protected internal static Task taskFamily;
-        protected internal static Task taskFFamily;
-        protected internal static Task taskSubFamily;
-        protected internal static Task taskModel;
-      
-    
-
-        protected internal static void GetAutomobileMarks()
+        protected internal static async Task ProcessUrlAsync(string url, WebClient webClient, HtmlDocument doc)
         {
-            try
-            {
+            string page = await webClient.DownloadStringTaskAsync(url);
+            doc.LoadHtml(page);
 
-                WebClient WebClient = new WebClient();
-                string page = WebClient.DownloadString(Url);
-                HtmlDocument Doc = new HtmlDocument();
-                Doc.LoadHtml(page);
-
-                var table = Doc.DocumentNode.SelectSingleNode("//table[@class='tck']");
-
-                var rows = table.Descendants("tr");
-
-                //Parallel.ForEach(rows, node =>
-                foreach (var node in rows)
-                {
-                    var hrefs = node.SelectNodes(".//a");
-
-                    var ghre = node.GetAttributeValue("href", "/tech");
-                    string[] array = node.InnerText.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int i = 0; i < array.Length - 1; i++)
-                    {
-
-
-                        TradeMark tradeMark = new TradeMark
-                        {
-                            TradeMarkName = array[i],
-                            TradeMarkUrl = "http://www.autosvit.com.ua/" + hrefs[i].GetAttributeValue("href", "/tech")
-                        };
-                        tradeMarks.Add(tradeMark);
-                        // db.TradeMarks.Add(tradeMark);
-                        // db.SaveChanges();
-                        listOfMarksHrefs.Add(tradeMark.TradeMarkUrl);
-
-
-
-                    }
-                }
-            }
-
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-           
-        }
-        protected internal static void GetAutomobileFamily(string href, Guid id)
-        {
-            try
-            {
-               
-                //Parallel.ForEach(listOfMarksHrefs, href =>
-               
-                WebClient WebClient = new WebClient();
-                string page = WebClient.DownloadString(href);
-                HtmlDocument Doc = new HtmlDocument();
-                Doc.LoadHtml(page);
-
-                var row = Doc.DocumentNode.SelectNodes("//table[@class='tck']");
-
-                foreach (var node in row)
-                //Parallel.ForEach(row, node =>
-                {
-
-                    var hrefs = node.SelectNodes(".//a");
-                    if (hrefs != null)
-                    {
-                        //Parallel.ForEach(hrefs, link =>
-                        foreach (var link in hrefs)
-                        {
-                            // using (CarDbModel db = new CarDbModel())
-                            //{
-                            Family carFamily = new Family
-                            {
-                                FamilyName = node.InnerText.Trim(),
-                                FamilyUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech"),
-                                TradeMarkId = id
-                            };
-                            families.Add(carFamily);
-                            //db.Families.Add(carFamily);
-                            //db.SaveChanges();
-                            listOfFamiliesHrefs.Add(carFamily.FamilyUrl);
-                            
-
-                        }
-                     
-                    }
-                   
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        
         }
 
-
-        protected internal static void GetAutomobileSubFamily(string href, Guid id)
+        protected internal static async Task GetAutomobileMarks()
         {
-            try
+            WebClient WebClient = new WebClient();
+            HtmlDocument Doc = new HtmlDocument();
+            string page = WebClient.DownloadString(Url);
+            Doc.LoadHtml(page);
+            var table = Doc.DocumentNode.SelectSingleNode("//table[@class='tck']");
+            var rows = table.Descendants("tr");
+            var tasks = new List<Task>();
+            int count = 1;
+            while (count-- > 0)
             {
-                //Parallel.ForEach()
-                //Parallel.ForEach(listOfFamiliesHrefs, href =>
-
-                WebClient WebClient = new WebClient();
-                string page = WebClient.DownloadString(href);
-                HtmlDocument Doc = new HtmlDocument();
-                Doc.LoadHtml(page);
-                var div = Doc.DocumentNode.SelectNodes("//div[@class='text']").Descendants("center");
-                //Parallel.ForEach(div, elem =>
-                foreach (var elem in div)
+                var taskToGetMarks = Task.Run(async () =>
                 {
-                    var hrefs = elem.SelectNodes(".//a");
-                    if (hrefs != null)
+                    try
                     {
-                        //Parallel.ForEach(hrefs, link =>
-                        foreach (var link in hrefs)
-                        {
-                            // using (CarDbModel db = new CarDbModel())
-                            // {
-                            SubFamily subFamily = new SubFamily
+                       
+                        
+                        //Parallel.ForEach(rows, node =>
+                        foreach (var node in rows)
+                        {   //pages
+                            var hrefs = node.SelectNodes(".//a");
+                            string[] array = node.InnerText.Trim().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                            for (int i = 0; i < array.Length - 1; i++)
                             {
-                                SubFamilyName = elem.InnerText.Trim(),
-                                SubFamilyUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech"),
-                                FamilyId = id
-                            };
-                            subFamilies.Add(subFamily);
-                            // db.SubFamilies.Add(subFamily);
-                            // db.SaveChanges();
-                            listOfSubFamiliesHrefs.Add(subFamily.SubFamilyUrl);
-
-                        }
-
-
-                    }
-                }
-            }
-
-
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            
-        }
-        protected internal static void GetAutomobileModel(string href, Guid id)
-        {
-            try
-            {
-                //Parallel.ForEach(listOfSubFamiliesHrefs, href =>
-
-                WebClient WebClient = new WebClient();
-                string page = WebClient.DownloadString(href);
-                HtmlDocument Doc = new HtmlDocument();
-                Doc.LoadHtml(page);
-                var table = Doc.DocumentNode.SelectNodes("//table[@class='text']");
-                if (table != null)
-                {
-                    var rows = table.Descendants("tr");
-                    // Parallel.ForEach(rows, elem =>
-                    foreach (var elem in rows)
-                    {
-                        if (elem != null)
-                        {
-                            var hrefs = elem.SelectNodes(".//a");
-                            if (hrefs != null)
-                            {
-                                // using (CarDbModel db = new CarDbModel())
-                                ///{
-                                // Parallel.ForEach(hrefs, link =>
-                                foreach (var link in hrefs)
+                                TradeMark tradeMark = new TradeMark
                                 {
-
-                                    Model carModel = new Model
-                                    {
-                                        ModelName = elem.InnerText.Trim(),
-                                        ModelUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech"),
-                                        SubFamilyId = id
-
-                                    };
-                                    // carModel.ModelProperties = GetAutomobileTechData(carModel.ModelUrl, carModel);
-                                    models.Add(carModel);
-
-
-                                    // db.Models.Add(carModel);
-                                    // db.SaveChanges();
-                                    listOfModelsHrefs.Add(carModel.ModelUrl);
-
-                                }
-
+                                    TradeMarkName = array[i],
+                                    TradeMarkUrl = "http://www.autosvit.com.ua/" + hrefs[i].GetAttributeValue("href", "/tech")
+                                };
+                                tradeMarks.Add(tradeMark);
+                                Console.WriteLine(tradeMark.TradeMarkName);
+                                listOfMarksHrefs.Add(tradeMark.TradeMarkUrl);
                             }
                         }
-
-
+                        //is it better to write each item or list of items?
+                        using (var context = new CarEntitiesContext())
+                        {
+                            tradeMarks.ForEach(s => context.TradeMarks.Add(s));
+                            await context.SaveChangesAsync();
+                        }
                     }
-                }
-            }
-            
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            
-        }
-        protected internal static void GetAutomobileTechData(string href, Guid modelId)
-        {
-            try
-            {
-                
-                Dictionary<string, string> itemProperties = new Dictionary<string, string>();
-                //foreach (string href in listOfModelsHrefs)
-                WebClient WebClient = new WebClient();
-                string page = WebClient.DownloadString(href);
-                HtmlDocument Doc = new HtmlDocument();
-                Doc.LoadHtml(page);
-                var rows = Doc.DocumentNode.SelectNodes("//table[@class='text']").Descendants("tr");
-                //Parallel.ForEach(rows, elem =>
-                foreach (var elem in rows)
-                {
-                    var count = elem.SelectNodes("./td").Count;
-                    if (count > 1)
+                    catch (Exception ex)
                     {
-                        string propKey = elem.SelectSingleNode("./td").InnerText.Trim();
-                        string propValue = elem.SelectSingleNode("./td[2]").InnerText.Trim();
-                       
-                        itemProperties[propKey] = propValue;
-                     
+                        Console.WriteLine(ex.Message);
                     }
-                 
-                }
-                TechData techInfor = new TechData
-                {
-                    ModelId = modelId,
-                    TechInfo = SerealizeDictionary(itemProperties)
-                };
-                techData.Add(techInfor);
+
+                });
+                
+                tasks.Add(taskToGetMarks);
             }
-            catch (Exception ex)
+           Task t = Task.WhenAll(tasks);
+            try { 
+            t.Wait();
+        }
+      catch (AggregateException)
+      {}
+
+    await GetAutomobileFamily();
+        }
+        protected internal static async Task GetAutomobileFamily()
+        {
+            WebClient WebClient = new WebClient();
+            HtmlDocument Doc = new HtmlDocument();
+            foreach (string href in listOfMarksHrefs)
             {
-                Console.WriteLine(ex.Message);
+                var tasks = new List<Task>();
+                int count = 10;
+                while (count-- > 0)
+                {
+                    var taskToGetFamilies = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            string page = await WebClient.DownloadStringTaskAsync(href);
+                            Doc.LoadHtml(page);
+                            var row = Doc.DocumentNode.SelectNodes("//table[@class='tck']");
+                            foreach (var node in row)
+                            {
+                                var hrefs = node.SelectNodes(".//a");
+                                if (hrefs != null)
+                                {
+                                    foreach (var link in hrefs)
+                                    {
+                                        Family carFamily = new Family
+                                        {
+                                            FamilyName = node.InnerText.Trim(),
+                                            FamilyUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech")
+                                            //how i link mark with families?
+                                            //TradeMarkId = id
+                                        };
+                                        families.Add(carFamily);
+                                        listOfFamiliesHrefs.Add(carFamily.FamilyUrl);
+                                    }
+                                }
+                            }
+                            using (var context = new CarEntitiesContext())
+                            {
+                                families.ForEach(s => context.Families.Add(s));
+                                await context.SaveChangesAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+
+                    });
+                    tasks.Add(taskToGetFamilies);
+                }
+               Task t= Task.WhenAll(tasks);
+                try
+                {
+                    await t.ContinueWith(task => { GetAutomobileSubFamily(); });
+                }
+                catch (AggregateException)
+                { }
+
+              
+            }
+        }
+
+        protected internal static async Task GetAutomobileSubFamily()
+        {
+            WebClient WebClient = new WebClient();
+            HtmlDocument Doc = new HtmlDocument();
+            foreach (string href in listOfFamiliesHrefs)
+            {
+                var tasks = new List<Task>();
+                int count = 10;
+                while (count-- > 0)
+                {
+                    var taskToGetSubFamily = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            string page = await WebClient.DownloadStringTaskAsync(href);
+                            Doc.LoadHtml(page);
+                            var div = Doc.DocumentNode.SelectNodes("//div[@class='text']").Descendants("center");
+                            foreach (var elem in div)
+                            {
+                                var hrefs = elem.SelectNodes(".//a");
+                                if (hrefs != null)
+                                {
+                                    foreach (var link in hrefs)
+                                    {
+                                        SubFamily subFamily = new SubFamily
+                                        {
+                                            SubFamilyName = elem.InnerText.Trim(),
+                                            SubFamilyUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech"),
+                                            //FamilyId = id
+                                        };
+                                        subFamilies.Add(subFamily);
+                                        listOfSubFamiliesHrefs.Add(subFamily.SubFamilyUrl);
+                                    }
+                                }
+                            }
+                            using (var context = new CarEntitiesContext())
+                            {
+                                subFamilies.ForEach(s => context.SubFamilies.Add(s));
+                                await context.SaveChangesAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+
+                    });
+                    tasks.Add(taskToGetSubFamily);
+                }
+                await Task.WhenAll(tasks);
+                await GetAutomobileModel();
+            }
+        }
+
+        protected internal static async Task GetAutomobileModel()
+        {
+
+            WebClient WebClient = new WebClient();
+            HtmlDocument Doc = new HtmlDocument();
+            foreach (string href in listOfSubFamiliesHrefs)
+            {
+                var tasks = new List<Task>();
+                int count = 10;
+                while (count-- > 0)
+                {
+                    var taskToGetModels = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            string page = await WebClient.DownloadStringTaskAsync(href);
+                            Doc.LoadHtml(page);
+                            var table = Doc.DocumentNode.SelectNodes("//table[@class='text']");
+                            if (table != null)
+                            {
+                                var rows = table.Descendants("tr");
+                                foreach (var elem in rows)
+                                {
+                                    if (elem != null)
+                                    {
+                                        var hrefs = elem.SelectNodes(".//a");
+                                        if (hrefs != null)
+                                        {
+                                            foreach (var link in hrefs)
+                                            {
+                                                Model carModel = new Model
+                                                {
+                                                    ModelName = elem.InnerText.Trim(),
+                                                    ModelUrl = "http://www.autosvit.com.ua/" + link.GetAttributeValue("href", "/tech"),
+                                                    // SubFamilyId = id
+                                                };
+                                                models.Add(carModel);
+                                                listOfModelsHrefs.Add(carModel.ModelUrl);
+                                            }
+                                        }
+                                    }
+                                }
+                                using (var context = new CarEntitiesContext())
+                                {
+                                    models.ForEach(s => context.Models.Add(s));
+                                    await context.SaveChangesAsync();
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    });
+                    tasks.Add(taskToGetModels);
+                }
+                await Task.WhenAll(tasks);
+                await GetAutomobileTechData();
+            }
+        }
+        protected internal static async Task GetAutomobileTechData()
+        {
+            WebClient WebClient = new WebClient();
+            HtmlDocument Doc = new HtmlDocument();
+            Dictionary<string, string> itemProperties = new Dictionary<string, string>();
+            foreach (string href in listOfModelsHrefs)
+            {
+                var tasks = new List<Task>();
+                int count = 10;
+                while (count-- > 0)
+                {
+                    var taskToGetTechData = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            string page = await WebClient.DownloadStringTaskAsync(href);
+                            Doc.LoadHtml(page);
+                            var rows = Doc.DocumentNode.SelectNodes("//table[@class='text']").Descendants("tr");
+                            foreach (var elem in rows)
+                            {
+                                var countNode = elem.SelectNodes("./td").Count;
+                                if (countNode > 1)
+                                {
+                                    string propKey = elem.SelectSingleNode("./td").InnerText.Trim();
+                                    string propValue = elem.SelectSingleNode("./td[2]").InnerText.Trim();
+                                    itemProperties[propKey] = propValue;
+                                }
+                                TechData techInfor = new TechData
+                                {
+                                    //ModelId = modelId,
+                                    TechInfo = SerealizeDictionary(itemProperties)
+                                };
+                                techData.Add(techInfor);
+                            }
+                            using (var context = new CarEntitiesContext())
+                            {
+                                techData.ForEach(s => context.TechData.Add(s));
+                                await context.SaveChangesAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    });
+                    tasks.Add(taskToGetTechData);
+                }
+                await Task.WhenAll(tasks);
+
             }
         }
     }
