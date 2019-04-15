@@ -39,7 +39,7 @@ namespace CarApplication.Connection
                 entity.Property(e => e.FamilyId);
                 entity.Property(e => e.FamilyUrl);
                 entity.Property(d => d.FamilyName);
-                entity.HasOne(e => e.TradeMark).WithMany(p => p.CarFamilies);
+                //entity.HasOne(e => e.TradeMark).WithMany(p => p.CarFamilies);
 
             });
             modelBuilder.Entity<SubFamily>(entity =>

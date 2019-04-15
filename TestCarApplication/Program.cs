@@ -14,7 +14,7 @@ namespace TestCarApplication
         {
           
 
-            ParsingCars.GetAutomobileMarks();
+             ParsingCars.GetAutomobileMarks().Wait();
     
 
         }
